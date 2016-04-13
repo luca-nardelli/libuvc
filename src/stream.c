@@ -606,7 +606,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
       }
     }
     break;
-  case LIBUSB_TRANSFER_CANCELLED: 
+  case LIBUSB_TRANSFER_CANCELLED:
   case LIBUSB_TRANSFER_ERROR:
   case LIBUSB_TRANSFER_NO_DEVICE: {
     int i;
@@ -1175,9 +1175,14 @@ uvc_error_t uvc_stream_stop(uvc_stream_handle_t *strmh) {
   for(i=0; i < LIBUVC_NUM_TRANSFER_BUFS; i++) {
     if(strmh->transfers[i] != NULL) {
       int res = libusb_cancel_transfer(strmh->transfers[i]);
+      UVC_DEBUG("Cancelling transfer %d. Res = %d",i,res);
       if(res < 0 && res != LIBUSB_ERROR_NOT_FOUND ) {
         free(strmh->transfers[i]->buffer);
         libusb_free_transfer(strmh->transfers[i]);
+        strmh->transfers[i] = NULL;
+      }
+      //Set transfer to null if status is -5 (it means that it has already completed or has been already cancelled)
+      if(res == LIBUSB_ERROR_NOT_FOUND){
         strmh->transfers[i] = NULL;
       }
     }
@@ -1186,11 +1191,14 @@ uvc_error_t uvc_stream_stop(uvc_stream_handle_t *strmh) {
   /* Wait for transfers to complete/cancel */
   do {
     for(i=0; i < LIBUVC_NUM_TRANSFER_BUFS; i++) {
-      if(strmh->transfers[i] != NULL)
+      if(strmh->transfers[i] != NULL){
+          UVC_DEBUG("Transfer %d is not null",i);
         break;
+      }
     }
     if(i == LIBUVC_NUM_TRANSFER_BUFS )
       break;
+    UVC_DEBUG("Waiting for transfer completion...");
     pthread_cond_wait(&strmh->cb_cond, &strmh->cb_mutex);
   } while(1);
   // Kick the user thread awake
