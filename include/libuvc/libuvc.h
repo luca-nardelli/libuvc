@@ -541,6 +541,13 @@ uvc_error_t uvc_start_streaming(
     void *user_ptr,
     uint8_t flags);
 
+uvc_error_t uvc_start_streaming_poll(
+    uvc_device_handle_t *devh,
+    uvc_stream_ctrl_t *ctrl,
+    uint8_t flags,
+    uvc_stream_handle_t **strmh);
+
+
 uvc_error_t uvc_start_iso_streaming(
     uvc_device_handle_t *devh,
     uvc_stream_ctrl_t *ctrl,

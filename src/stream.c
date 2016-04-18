@@ -678,6 +678,29 @@ uvc_error_t uvc_start_streaming(
   return UVC_SUCCESS;
 }
 
+/** Like uvc_start_streaming, but without the callback (returns the stream handle and the user has to call uvc_stream_get_frame)
+ */
+uvc_error_t uvc_start_streaming_poll(
+    uvc_device_handle_t *devh,
+    uvc_stream_ctrl_t *ctrl,
+    uint8_t flags,
+    uvc_stream_handle_t **strmh)
+{
+    uvc_error_t ret;
+
+    ret = uvc_stream_open_ctrl(devh, strmh, ctrl);
+    if (ret != UVC_SUCCESS)
+      return ret;
+
+    ret = uvc_stream_start(*strmh, NULL, NULL, flags);
+    if (ret != UVC_SUCCESS) {
+      uvc_stream_close(*strmh);
+      return ret;
+    }
+
+    return UVC_SUCCESS;
+}
+
 /** Begin streaming video from the camera into the callback function.
  * @ingroup streaming
  *
